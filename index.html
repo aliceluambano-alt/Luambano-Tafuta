@@ -3,70 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LuambanoFind - Tafuta Taarifa</title>
+    <title>LuambanoFind - Tafuta Kila Kitu</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f7f6;
             margin: 0;
-            padding: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
-            align-items: center;
-            height: 100vh;
         }
         .container {
             background-color: white;
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            text-align: center;
-            width: 90%;
-            max-width: 400px;
+            width: 100%;
+            max-width: 600px;
         }
-        h1 { color: #2c3e50; margin-bottom: 10px; }
-        p { color: #7f8c8d; font-size: 14px; margin-bottom: 20px; }
-        .search-box { display: flex; gap: 10px; }
+        h1 { color: #2c3e50; text-align: center; }
+        p.subtitle { color: #7f8c8d; text-align: center; font-size: 14px; }
+        
+        .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid #eee; }
+        .tab-btn {
+            flex: 1; padding: 10px; background: none; border: none;
+            font-size: 16px; font-weight: bold; cursor: pointer; color: #7f8c8d;
+        }
+        .tab-btn.active { color: #27ae60; border-bottom: 3px solid #27ae60; }
+
+        .search-area { display: none; }
+        .search-area.active { display: block; }
+
+        .search-box { display: flex; gap: 10px; margin-bottom: 15px; }
         input[type="text"] {
             flex: 1; padding: 12px; border: 1px solid #ccc;
-            border-radius: 8px; outline: none; font-size: 16px;
+            border-radius: 8px; font-size: 16px;
         }
-        input[type="text"]:focus { border-color: #27ae60; }
-        button {
+        button.action-btn {
             padding: 12px 20px; background-color: #27ae60; color: white;
             border: none; border-radius: 8px; cursor: pointer;
             font-size: 16px; font-weight: bold;
         }
-        button:hover { background-color: #219150; }
-        #matokeo { margin-top: 20px; font-weight: bold; color: #e67e22; }
+        button.action-btn:hover { background-color: #219150; }
+        
+        #selectFolderBtn { background-color: #3498db; width: 100%; margin-bottom: 15px;}
+        #selectFolderBtn:hover { background-color: #2980b9; }
+
+        #results {
+            margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;
+            max-height: 300px; overflow-y: auto;
+        }
+        .result-item {
+            background: #f9f9f9; padding: 10px; margin-bottom: 8px;
+            border-radius: 5px; border-left: 4px solid #27ae60;
+            font-size: 14px; word-break: break-all;
+        }
+        .file-type { color: #e67e22; font-weight: bold; font-size: 12px;}
+        .error { color: #e74c3c; text-align: center; }
+        .loading { color: #2980b9; text-align: center; font-weight: bold; }
     </style>
 </head>
 <body>
+
     <div class="container">
         <h1>LuambanoFind</h1>
-        <p>Mfumo wa kisasa wa kutafuta taarifa kwa urahisi na haraka.</p>
-        <div class="search-box">
-            <input type="text" id="tafutaInput" placeholder="Andika neno hapa...">
-            <button onclick="tafutaTaarifa()">Tafuta</button>
+        <p class="subtitle">Tafuta picha, video, na taarifa (Mtandaoni & Offline)</p>
+
+        <!-- Vitufe vya kubadilisha kati ya Mtandaoni na Offline -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('online', this)">Tafuta Mtandaoni</button>
+            <button class="tab-btn" onclick="switchTab('offline', this)">Tafuta Kwenye Kifaa</button>
         </div>
-        <div id="matokeo"></div>
+
+        <!-- Sehemu ya Kutafuta Mtandaoni -->
+        <div id="onlineTab" class="search-area active">
+            <div class="search-box">
+                <input type="text" id="onlineInput" placeholder="Tafuta taarifa mtandaoni (Mfano: Tanzania)...">
+                <button class="action-btn" onclick="searchOnline()">Tafuta</button>
+            </div>
+            <div id="onlineResults"></div>
+        </div>
+
+        <!-- Sehemu ya Kutafuta Kwenye Kifaa (Offline) -->
+        <div id="offlineTab" class="search-area">
+            <p style="font-size: 13px; color: #555;">
+                <b>Kwa Kompyuta:</b> Bonyeza kitufe hapa chini kuchagua folda (Mfano: Downloads au Pictures). 
+                <i>(Kwenye simu, kipengele hiki huenda kisifanye kazi kwa sababu ya usalama wa browser).</i>
+            </p>
+            <button id="selectFolderBtn" class="action-btn" onclick="chaguaFolda()">1. Chagua Folda Kwenye Kifaa</button>
+            
+            <div class="search-box">
+                <input type="text" id="offlineInput" placeholder="Andika jina la faili (Mfano: .jpg au .mp4)" disabled>
+                <button class="action-btn" onclick="searchOffline()" disabled id="offlineSearchBtn">Tafuta</button>
+            </div>
+            <div id="offlineResults"></div>
+        </div>
     </div>
+
     <script>
-        function tafutaTaarifa() {
-            var neno = document.getElementById("tafutaInput").value;
-            var eneoLaMatokeo = document.getElementById("matokeo");
-            if (neno === "") {
-                eneoLaMatokeo.innerHTML = "Tafadhali andika kitu ili utafute.";
-                eneoLaMatokeo.style.color = "red";
-            } else {
-                eneoLaMatokeo.innerHTML = "Inatafuta taarifa za: <b>" + neno + "</b>...";
-                eneoLaMatokeo.style.color = "#e67e22";
-                setTimeout(function() {
-                    eneoLaMatokeo.innerHTML = "Samahani, database bado haijaunganishwa. Hii ni UI pekee.";
-                    eneoLaMatokeo.style.color = "#2980b9";
-                }, 1500);
+        // ==========================================
+        // 1. Msimbo wa Kubadilisha Tabs
+        // ==========================================
+        function switchTab(tabName, btnElement) {
+            document.querySelectorAll('.search-area').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            btnElement.classList.add('active');
+        }
+
+        // ==========================================
+        // 2. Msimbo wa Kutafuta MTANDAONI (Online Search)
+        // ==========================================
+        async function searchOnline() {
+            const query = document.getElementById('onlineInput').value;
+            const resultsDiv = document.getElementById('onlineResults');
+            
+            if (!query) {
+                resultsDiv.innerHTML = '<p class="error">Tafadhali andika kitu cha kutafuta.</p>';
+                return;
             }
+
+            resultsDiv.innerHTML = '<p class="loading">Inatafuta mtandaoni...</p>';
+
+            try {
+                // Tunatumia API ya bure ya Wikipedia kutafuta taarifa
+                const response = await fetch(`https://sw.wikipedia.org/w/api.php?action=query&list=search&srsearch=${query}&format=json&origin=*`);
+                const data = await response.json();
+
+                resultsDiv.innerHTML = '';
+                
+                if (data.query.search.length === 0) {
+                    resultsDiv.innerHTML = '<p class="error">Hakuna taarifa zilizopatikana.</p>';
+                    return;
+                }
+
+                data.query.search.forEach(item => {
+                    const cleanSnippet = item.snippet.replace(/<[^>]*>?/gm, '');
+                    resultsDiv.innerHTML += `
+                        <div class="result-item">
+                            <b>${item.title}</b><br>
+                            <small>${cleanSnippet}...</small><br>
+                            <a href="https://sw.wikipedia.org/wiki/${item.title}" target="_blank">Soma zaidi</a>
+                        </div>
+                    `;
+                });
+
+            } catch (error) {
+                resultsDiv.innerHTML = '<p class="error">Hitilafu imetokea. Hakikisha una internet.</p>';
+            }
+        }
+
+        // ==========================================
+        // 3. Msimbo wa Kutafuta Kwenye KIFAA (Offline Search)
+        // ==========================================
+        let localFiles = []; 
+
+        async function chaguaFolda() {
+            const resultsDiv = document.getElementById('offlineResults');
+            
+            if (!window.showDirectoryPicker) {
+                resultsDiv.innerHTML = '<p class="error">Browser yako (au simu yako) haitumii teknolojia hii. Tumia Kompyuta na Chrome/Edge.</p>';
+                return;
+            }
+
+            try {
+                const directoryHandle = await window.showDirectoryPicker();
+                localFiles = []; 
+                resultsDiv.innerHTML = '<p class="loading">Inasoma faili, tafadhali subiri...</p>';
+
+                for await (const entry of directoryHandle.values()) {
+                    if (entry.kind === 'file') {
+                        localFiles.push(entry.name);
+                    }
+                }
+
+                resultsDiv.innerHTML = `<p style="color:green; font-weight:bold;">Imefanikiwa kusoma faili ${localFiles.length} kutoka kwenye folda uliyochagua.</p>`;
+                
+                document.getElementById('offlineInput').disabled = false;
+                document.getElementById('offlineSearchBtn').disabled = false;
+                document.getElementById('offlineInput').focus();
+
+            } catch (error) {
+                resultsDiv.innerHTML = '<p class="error">Umeghairi kuchagua folda.</p>';
+            }
+        }
+
+        function searchOffline() {
+            const query = document.getElementById('offlineInput').value.toLowerCase();
+            const resultsDiv = document.getElementById('offlineResults');
+            resultsDiv.innerHTML = '';
+
+            if (!query) return;
+
+            const matchedFiles = localFiles.filter(name => name.toLowerCase().includes(query));
+
+            if (matchedFiles.length === 0) {
+                resultsDiv.innerHTML = `<p class="error">Hakuna faili lililopatikana kwa jina "${query}".</p>`;
+                return;
+            }
+
+            matchedFiles.forEach(fileName => {
+                const ext = fileName.split('.').pop().toLowerCase();
+                let aina = "Faili";
+                let color = "#3498db";
+
+                if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) { aina = "Picha"; color = "#e67e22"; }
+                else if (['mp4', 'mkv', 'avi'].includes(ext)) { aina = "Video"; color = "#e74c3c"; }
+                else if (['exe', 'msi', 'apk'].includes(ext)) { aina = "Programu"; color = "#9b59b6"; }
+                else if (['mp3', 'wav'].includes(ext)) { aina = "Nyimbo"; color = "#2ecc71"; }
+                else if (['pdf', 'docx', 'txt'].includes(ext)) { aina = "Nyaraka"; color = "#34495e"; }
+
+                resultsDiv.innerHTML += `
+                    <div class="result-item">
+                        ${fileName} <br>
+                        <span class="file-type" style="color:${color}">[${aina}]</span>
+                    </div>
+                `;
+            });
         }
     </script>
 </body>
-              </html>
+    </html>
