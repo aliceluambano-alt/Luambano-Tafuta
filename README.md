@@ -5,8 +5,6 @@
 ## 📌 Maelezo
 Luambano-Tafuta ni mfumo wa kisasa unaosaidia watumiaji kupata taarifa wanazohitaji kwa urahisi na kwa haraka. Project hii imeundwa kwa lengo la kurahisisha uzoefu wa utafutaji.
 
-> **Kumbuka:** Badilisha sehemu hii ukiwa na maelezo kamili ya project yako.
-
 ## ✨ Vipengele Vikuu
 - Utafutaji wa haraka na sahihi
 - Interface rahisi kutumia
@@ -14,8 +12,9 @@ Luambano-Tafuta ni mfumo wa kisasa unaosaidia watumiaji kupata taarifa wanazohit
 - Inafanya kazi vizuri kwenye simu na kompyuta
 
 ## 🛠️ Teknolojia
-- HTML / CSS / JavaScript
-- (Ongeza teknolojia zingine unazotumia)
+- HTML
+- CSS
+- JavaScript
 
 ## 🚀 Jinsi ya Kuanzisha Project
 
