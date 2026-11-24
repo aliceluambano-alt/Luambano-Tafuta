@@ -22,7 +22,6 @@
             max-width: 600px;
         }
         
-        /* Sehemu ya Logo */
         .logo-container {
             display: flex;
             align-items: center;
@@ -40,7 +39,6 @@
         
         p.subtitle { color: #7f8c8d; text-align: center; font-size: 14px; margin-bottom: 20px;}
         
-        /* Vitufe vya Kubadilisha Tab */
         .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid #eee; }
         .tab-btn {
             flex: 1; padding: 12px 10px; background: none; border: none;
@@ -51,25 +49,26 @@
         .search-area { display: none; }
         .search-area.active { display: block; }
 
-        /* Sehemu ya Kutafuta */
-        .search-box { display: flex; gap: 10px; margin-bottom: 15px; }
-        input[type="text"] {
-            flex: 1; padding: 12px; border: 1px solid #ccc;
+        .search-box { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+        
+        select, input[type="text"] {
+            padding: 12px; border: 1px solid #ccc;
             border-radius: 8px; font-size: 16px; outline: none;
+            background-color: white;
         }
-        input[type="text"]:focus { border-color: #27ae60; }
+        select:focus, input[type="text"]:focus { border-color: #27ae60; }
         
         button.action-btn {
             padding: 12px 20px; background-color: #27ae60; color: white;
             border: none; border-radius: 8px; cursor: pointer;
-            font-size: 16px; font-weight: bold;
+            font-size: 16px; font-weight: bold; width: 100%;
         }
         button.action-btn:hover { background-color: #219150; }
+        button.action-btn:disabled { background-color: #95a5a6; cursor: not-allowed; }
         
-        #selectFolderBtn { background-color: #3498db; width: 100%; margin-bottom: 15px;}
-        #selectFolderBtn:hover { background-color: #2980b9; }
+        .btn-folder { background-color: #3498db; margin-bottom: 15px;}
+        .btn-folder:hover { background-color: #2980b9; }
 
-        /* Matokeo */
         #onlineResults, #offlineResults {
             margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;
             max-height: 300px; overflow-y: auto;
@@ -83,12 +82,15 @@
         .file-type { font-weight: bold; font-size: 12px;}
         .error { color: #e74c3c; text-align: center; font-weight: bold; }
         .loading { color: #2980b9; text-align: center; font-weight: bold; }
+        
+        .folder-status {
+            font-size: 13px; text-align: center; color: #27ae60; font-weight: bold; margin-bottom: 10px; display: none;
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <!-- Hapa ndipo Logo ilipo. Jina la picha limewekwa tayari -->
         <div class="logo-container">
             <img src="IMG-20261124-WA4246.jpg" alt="LuambanoFind Logo" class="logo-icon">
             <h1>LuambanoFind</h1>
@@ -96,7 +98,6 @@
         
         <p class="subtitle">Tafuta picha, video, na taarifa (Mtandaoni & Offline)</p>
 
-        <!-- Vitufe vya Tab -->
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('online', this)">Tafuta Mtandaoni</button>
             <button class="tab-btn" onclick="switchTab('offline', this)">Tafuta Kwenye Kifaa</button>
@@ -106,22 +107,33 @@
         <div id="onlineTab" class="search-area active">
             <div class="search-box">
                 <input type="text" id="onlineInput" placeholder="Tafuta taarifa (Mfano: Tanzania)...">
-                <button class="action-btn" onclick="searchOnline()">Tafuta</button>
+                <button class="action-btn" onclick="searchOnline()">Tafuta Mtandaoni</button>
             </div>
             <div id="onlineResults"></div>
         </div>
 
         <!-- Tab ya Offline (Kwenye Kifaa) -->
         <div id="offlineTab" class="search-area">
-            <p style="font-size: 13px; color: #555;">
-                <b>Kwa Kompyuta:</b> Bonyeza kitufe hapa chini kuchagua folda (Mfano: Downloads). 
-                <i>(Kwenye simu, kipengele hiki huenda kisifanye kazi kwa sababu ya usalama wa browser).</i>
+            <p style="font-size: 13px; color: #555; text-align: center;">
+                <b>Kwanza:</b> Bonyeza kitufe cha bluu kuchagua folda (Mara moja tu). Kisha andika unachotaka.
             </p>
-            <button id="selectFolderBtn" class="action-btn" onclick="chaguaFolda()">1. Chagua Folda Kwenye Kifaa</button>
+            
+            <button id="selectFolderBtn" class="action-btn btn-folder" onclick="chaguaFolda()">📁 Chagua Folda Kwenye Kifaa</button>
+            <p id="folderStatus" class="folder-status">Folda imechaguliwa tayari!</p>
             
             <div class="search-box">
-                <input type="text" id="offlineInput" placeholder="Andika jina la faili (Mfano: .jpg au .mp4)" disabled>
-                <button class="action-btn" onclick="searchOffline()" disabled id="offlineSearchBtn">Tafuta</button>
+                <!-- Hapa ni kichaguzi cha aina -->
+                <select id="categorySelect">
+                    <option value="zote">Aina Zote za Faili</option>
+                    <option value="picha">Picha (.jpg, .png)</option>
+                    <option value="video">Video (.mp4, .mkv)</option>
+                    <option value="programu">Programu (.exe, .apk)</option>
+                    <option value="nyaraka">Nyaraka (.pdf, .docx)</option>
+                </select>
+
+                <input type="text" id="offlineInput" placeholder="Andika jina la faili unalotafuta..." disabled>
+                
+                <button class="action-btn" onclick="searchOffline()" disabled id="offlineSearchBtn">Tafuta Kwenye Kifaa</button>
             </div>
             <div id="offlineResults"></div>
         </div>
@@ -129,7 +141,7 @@
 
     <script>
         // ==========================================
-        // 1. Msimbo wa Kubadilisha Tabs
+        // 1. Kubadilisha Tabs
         // ==========================================
         function switchTab(tabName, btnElement) {
             document.querySelectorAll('.search-area').forEach(el => el.classList.remove('active'));
@@ -140,7 +152,7 @@
         }
 
         // ==========================================
-        // 2. Msimbo wa Kutafuta MTANDAONI (Wikipedia API)
+        // 2. Kutafuta MTANDAONI (Wikipedia API)
         // ==========================================
         async function searchOnline() {
             const query = document.getElementById('onlineInput').value;
@@ -181,12 +193,14 @@
         }
 
         // ==========================================
-        // 3. Msimbo wa Kutafuta Kwenye KIFAA (Offline)
+        // 3. Kutafuta Kwenye KIFAA (Offline)
         // ==========================================
         let localFiles = []; 
+        let folderImechaguliwa = false;
 
         async function chaguaFolda() {
             const resultsDiv = document.getElementById('offlineResults');
+            const statusText = document.getElementById('folderStatus');
             
             if (!window.showDirectoryPicker) {
                 resultsDiv.innerHTML = '<p class="error">Browser yako (au simu yako) haitumii teknolojia hii. Tumia Kompyuta na Chrome/Edge.</p>';
@@ -197,14 +211,19 @@
                 const directoryHandle = await window.showDirectoryPicker();
                 localFiles = []; 
                 resultsDiv.innerHTML = '<p class="loading">Inasoma faili, tafadhali subiri...</p>';
-
+                
+                // Inasoma faili zote zilizopo kwenye folda iliyochaguliwa
                 for await (const entry of directoryHandle.values()) {
                     if (entry.kind === 'file') {
                         localFiles.push(entry.name);
                     }
                 }
-
-                resultsDiv.innerHTML = `<p style="color:green; font-weight:bold;">Imefanikiwa kusoma faili ${localFiles.length} kutoka kwenye folda uliyochagua.</p>`;
+                
+                folderImechaguliwa = true;
+                document.getElementById('folderStatus').style.display = 'block';
+                document.getElementById('selectFolderBtn').innerText = "🔄 Badilisha Folda";
+                
+                resultsDiv.innerHTML = `<p style="color:green; font-weight:bold;">Tayari! Tafuta faili lolote kutoka kwenye folda hii.</p>`;
                 
                 document.getElementById('offlineInput').disabled = false;
                 document.getElementById('offlineSearchBtn').disabled = false;
@@ -217,19 +236,41 @@
 
         function searchOffline() {
             const query = document.getElementById('offlineInput').value.toLowerCase();
+            const category = document.getElementById('categorySelect').value;
             const resultsDiv = document.getElementById('offlineResults');
             resultsDiv.innerHTML = '';
 
-            if (!query) return;
+            // Kama mtumiaji hajaandika kitu, onyesha faili zote za aina aliyochagua
+            let matchedFiles = localFiles;
 
-            const matchedFiles = localFiles.filter(name => name.toLowerCase().includes(query));
+            // 1. Chuja kwa Aina (Category)
+            if (category !== 'zote') {
+                matchedFiles = matchedFiles.filter(fileName => {
+                    const ext = fileName.split('.').pop().toLowerCase();
+                    if (category === 'picha') return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+                    if (category === 'video') return ['mp4', 'mkv', 'avi', 'mov'].includes(ext);
+                    if (category === 'programu') return ['exe', 'msi', 'apk'].includes(ext);
+                    if (category === 'nyaraka') return ['pdf', 'docx', 'txt', 'xls', 'ppt'].includes(ext);
+                    return true;
+                });
+            }
 
+            // 2. Chuja kwa Jina (Text)
+            if (query !== "") {
+                matchedFiles = matchedFiles.filter(name => name.toLowerCase().includes(query));
+            }
+
+            // 3. Onyesha Matokeo
             if (matchedFiles.length === 0) {
-                resultsDiv.innerHTML = `<p class="error">Hakuna faili lililopatikana kwa jina "${query}".</p>`;
+                resultsDiv.innerHTML = `<p class="error">Hakuna faili lililopatikana.</p>`;
                 return;
             }
 
-            matchedFiles.forEach(fileName => {
+            // Onyesha tu faili 100 za kwanza ili kuepuka kusumbua simu
+            const displayLimit = 100; 
+            const filesToShow = matchedFiles.slice(0, displayLimit);
+
+            filesToShow.forEach(fileName => {
                 const ext = fileName.split('.').pop().toLowerCase();
                 let aina = "Faili";
                 let color = "#3498db";
@@ -247,7 +288,11 @@
                     </div>
                 `;
             });
+
+            if (matchedFiles.length > displayLimit) {
+                resultsDiv.innerHTML += `<p style="text-align:center; font-size:12px; color:#777;">Kuna faili zingine ${matchedFiles.length - displayLimit} ambazo hazijaonyeshwa. Andika jina mahususi zaidi.</p>`;
+            }
         }
     </script>
 </body>
-</html>
+    </html>
